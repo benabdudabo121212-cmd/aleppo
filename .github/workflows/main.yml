@@ -12,7 +12,7 @@ jobs:
       uses: actions/checkout@v4
 
     - name: Set up Node.js
-      uses: actions/js-node-v4@v4
+      uses: actions/setup-node@v4
       with:
         node-version: 20
 
@@ -20,7 +20,6 @@ jobs:
       run: |
         sudo apt-get install unzip
         unzip project-bolt-*.zip -d ./project-folder
-        cd project-folder
 
     - name: Install Android SDK & Java
       uses: actions/setup-java@v4
@@ -28,7 +27,7 @@ jobs:
         distribution: 'temurin'
         java-version: '17'
 
-    - name: Install Capgo and Build Android
+    - name: Install Dependencies and Build
       run: |
         cd project-folder
         npm install
