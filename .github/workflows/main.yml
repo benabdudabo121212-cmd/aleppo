@@ -20,7 +20,6 @@ jobs:
       run: |
         sudo apt-get install unzip
         unzip project-bolt-*.zip -d ./project-folder
-        # الذكاء الاصطناعي هنا يبحث عن مكان ملف package.json الحقيقي لتفادي أي ضياع في المجلدات
         if [ -f "./project-folder/package.json" ]; then
           echo "ROOT_PATH=./project-folder" >> $GITHUB_ENV
         else
@@ -37,14 +36,21 @@ jobs:
     - name: Install Dependencies and Build
       run: |
         cd ${{ env.ROOT_PATH }}
+        # تنصيب حزم العمل الأساسية
         npm install
+        # تنصيب أدوات الأندرويد والموبايل اللازمة يدوياً لمنع أي خطأ
+        npm install @capacitor/core @capacitor/cli @capacitor/android --save-dev
+        # بناء ملفات الواجهات الوردية للمطعم
         npm run build
+        # إنشاء ملف الإعدادات الأساسي للأندرويد تلقائياً ليتعرف عليه النظام
+        npx cap init "Aleppo Delivery" "com.aleppo.delivery" --web-dir=dist || true
+        # ربط الكود بملفات الأندرويد وبناء المشروع
         npx cap add android || true
         npx cap sync
         cd android
         ./gradlew assembleRelease
-        # نقل ملف الـ APK إلى المجلد الرئيسي ليسهل تحميله دون ضياع المسار
-        cp app/build/outputs/apk/release/app-release-unsigned.apk ../../app-release.apk  cp app/build/outputs/apk/release/*unsigned.apk ../../app-release.apk  cp app/build/outputs/apk/release/*.apk ../../app-release.apk
+        # إخراج ملف الـ APK النهائي إلى المجلد الرئيسي
+        cp app/build/outputs/apk/release/*-unsigned.apk ../../app-release.apk || cp app/build/outputs/apk/release/*.apk ../../app-release.apk
 
     - name: Upload APK Download Link
       uses: actions/upload-artifact@v4
