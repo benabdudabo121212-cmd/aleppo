@@ -1,0 +1,45 @@
+name: Build Android APK
+on:
+  push:
+    branches: [ "main" ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Node.js
+      uses: actions/js-node-v4@v4
+      with:
+        node-version: 20
+
+    - name: Extract Project Files
+      run: |
+        sudo apt-get install unzip
+        unzip project-bolt-*.zip -d ./project-folder
+        cd project-folder
+
+    - name: Install Android SDK & Java
+      uses: actions/setup-java@v4
+      with:
+        distribution: 'temurin'
+        java-version: '17'
+
+    - name: Install Capgo and Build Android
+      run: |
+        cd project-folder
+        npm install
+        npm run build
+        npx cap add android || true
+        npx cap sync
+        cd android
+        ./gradlew assembleRelease
+        
+    - name: Upload APK Download Link
+      uses: actions/upload-artifact@v4
+      with:
+        name: aleppo-delivery-apk
+        path: project-folder/android/app/build/outputs/apk/release/app-release-unsigned.apk
