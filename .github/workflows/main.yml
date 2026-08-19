@@ -20,6 +20,13 @@ jobs:
       run: |
         sudo apt-get install unzip
         unzip project-bolt-*.zip -d ./project-folder
+        # الذكاء الاصطناعي هنا يبحث عن مكان ملف package.json الحقيقي لتفادي أي ضياع في المجلدات
+        if [ -f "./project-folder/package.json" ]; then
+          echo "ROOT_PATH=./project-folder" >> $GITHUB_ENV
+        else
+          SUB_DIR=$(find ./project-folder -name package.json -exec dirname {} \;)
+          echo "ROOT_PATH=$SUB_DIR" >> $GITHUB_ENV
+        fi
 
     - name: Install Android SDK & Java
       uses: actions/setup-java@v4
@@ -29,16 +36,18 @@ jobs:
 
     - name: Install Dependencies and Build
       run: |
-        cd project-folder
+        cd ${{ env.ROOT_PATH }}
         npm install
         npm run build
         npx cap add android || true
         npx cap sync
         cd android
         ./gradlew assembleRelease
-        
+        # نقل ملف الـ APK إلى المجلد الرئيسي ليسهل تحميله دون ضياع المسار
+        cp app/build/outputs/apk/release/app-release-unsigned.apk ../../app-release.apk  cp app/build/outputs/apk/release/*unsigned.apk ../../app-release.apk  cp app/build/outputs/apk/release/*.apk ../../app-release.apk
+
     - name: Upload APK Download Link
       uses: actions/upload-artifact@v4
       with:
         name: aleppo-delivery-apk
-        path: project-folder/android/app/build/outputs/apk/release/app-release-unsigned.apk
+        path: app-release.apk
