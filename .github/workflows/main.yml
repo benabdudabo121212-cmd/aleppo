@@ -42,7 +42,12 @@ jobs:
         npx cap init "Aleppo Delivery" "com.aleppo.delivery" --web-dir=dist || true
         npx cap add android || true
         npx cap sync
+        
+        # خطوة سحرية: زرع أمر حل تعارض الملفات المكررة (Duplicate Class Fix) داخل إعدادات أندرويد تلقائياً
         cd android
+        echo "android.useAndroidX=true" >> gradle.properties
+        echo "android.enableJetifier=true" >> gradle.properties
+        
         chmod +x gradlew
         ./gradlew assembleRelease
         cp app/build/outputs/apk/release/*-unsigned.apk ../../app-release.apk || cp app/build/outputs/apk/release/*.apk ../../app-release.apk
